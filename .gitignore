@@ -4,3 +4,7 @@ node_modules/
 .DS_Store
 Thumbs.db
 .pack-test/
+
+# 投稿用的生成文件
+*__*__*.yml
+

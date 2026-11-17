@@ -226,6 +226,12 @@ function createRepo(owner) {
     run('gh', ['repo', 'create', `${owner}/${REPO_NAME}`, '--public',
       '--description', '中文写作体检：按 11 个文体判定模板腔并给出改写处方。不判断作者身份。',
       '--source', '.', '--remote', 'origin', '--push']);
+    // gh repo create --push 会走用户自己的全局 git 配置，如果那里有
+    // url.insteadOf 改写（例如把 github.com 改到 codeload），remote 会被
+    // 写成错地址、推送 404。这里强制改回来再推一次。
+    tryRun('git', ['remote', 'set-url', 'origin', `${remote}.git`]);
+    const pushed = tryRun('git', ['push', '-u', 'origin', 'main']);
+    if (!pushed.ok) fail('推送失败', pushed.out.split('\n').slice(-4).join('\n  '));
     say(`✓ 已建仓并推送：${remote}`);
   } else {
     const hasRemote = tryRun('git', ['remote', 'get-url', 'origin']);
