@@ -1,0 +1,29 @@
+# nature · 中文写作体检— 组合包补丁层
+#
+# 🔴 2026-10-14 修复「插件从未加载」的根因（references/43）：
+#   Cordis 方言里，**带 id 但无 insert 的 patch = 覆盖已存在的行**；
+#   目标行不存在 → 警告后【跳过】，插件代码从未被加载，且不报错。
+#   本 bundle 是【第一个声明自己的行】，必须用 `- insert:` 声明新行。
+#
+# 用户可以在 $DSH_HOME/profiles/<profile>/cordis.patch.yml 里按 id 覆盖下面的 config，
+# 注意 patch 是整块替换而不是合并，要保留的字段必须重述一遍。
+- insert:
+    - id: nature-chinese
+      name: "dsh-plugin-nature"
+      config:
+        # 常驻中文表达规则。关掉它，插件就只剩工具和技能。
+        promptSection: true
+        # balanced = 只列必删项；strict = 额外禁掉对举句式、结尾升华，并要求句段长短交错。
+        promptTone: balanced
+        # 注册 nature-chinese 技能（按需加载，不占常驻上下文）。
+        skill: true
+        # 目标中文语区：zh-CN / zh-TW / zh-HK
+        locale: zh-CN
+        # nature 工具的默认文体，见 lib/content.js 的 GENRES
+        genre: general
+        # nature 工具的默认改写强度：light / standard / rewrite
+        strictness: standard
+        # 追加到必删清单的词。例如 ["生态位", "闭环", "颗粒度"]
+        customBannedWords: []
+        # 追加到常驻规则和技能末尾的一句话要求
+        extraRules: ""

@@ -1,0 +1,98 @@
+系列技术文档 ② —— 不只列「用了什么」，更讲清「为什么用」以及「落地时真正卡住人的重难点」。
+
+## 1. 后端技术栈（速查表）
+
+| 技术 | 版本 | 作用 |
+| --- | --- | --- |
+| Spring Boot | 4.1.0 | 应用框架 |
+| Java | 25 | 开发语言（虚拟线程） |
+| Spring AI | 2.0.0 | AI 集成，统一接入 OpenAI 兼容模型 |
+| PostgreSQL + pgvector | 14+（默认 16） | 关系库 + 向量（维度 1024，COSINE） |
+| Redis + Redisson | 6+ / 4.0.0 | 缓存 + Redis Stream 异步队列 |
+| Apache Tika | 2.9.2 | 文档解析（PDF/DOCX/TXT） |
+| iText 8 | 8.0.5 | PDF 报告导出（内嵌中文字体） |
+| MapStruct | 1.6.3 | Entity ↔ DTO 编译期映射 |
+| SpringDoc | 3.0.2 | 接口文档（Swagger UI） |
+| AWS S3 SDK | 2.29.51 | 对象存储（兼容 MinIO / RustFS） |
+| Gradle | 9.6.1 | 构建工具 |
+
+## 2. 前端技术栈（速查表）
+
+| 技术 | 版本 | 作用 |
+| --- | --- | --- |
+| React | 18.3 | UI 框架 |
+| TypeScript | 5.6 | 类型安全 |
+| Vite | 5.4 | 构建 / Dev Server |
+| Tailwind CSS | 4.1 | 原子化样式 |
+| React Router | 7.11 | 路由 |
+| Framer Motion | 12.23 | 动画 |
+| Recharts | 3.6 | 图表（趋势/统计） |
+| Lucide React | 0.468 | 图标 |
+| React Big Calendar | 1.19 | 面试日历 |
+| React Virtuoso | 4.18 | RAG 聊天虚拟列表 |
+| pnpm | 10.26 | 包管理 |
+
+## 3. 架构总览（分层 + 依赖）
+
+前端 SPA（React/Vite）分 pages / components / api / types / hooks / utils；经 REST + SSE + WebSocket 连到 Spring Boot 的 Controller。后端 Controller → Service（业务编排，@Transactional 最小范围），下分三块：common（限流 / AI / 异步模板 / 异常 / Result）、infrastructure（导出 / 文件 / MapStruct / Redis）、modules（25+ 业务模块，各自 MVC 自包含）。再往下接 PostgreSQL + pgvector、Redis（缓存 + Stream）、RustFS/MinIO（对象存储）、外部 LLM / ASR / TTS（DashScope 等）。
+
+## 4. 核心选型的原因：一套组件扛多职
+
+选型的底层思路是「能少一个组件就少一个」——不是炫技少，而是降低部署面与运维心智：
+
+- PostgreSQL + pgvector：一套组件同时存业务关系数据与 1024 维向量，避免再引入 Milvus/Weaviate 这类重型向量库。对简历/知识库这类中等规模语义检索，PG 向量能力已够用。
+- Redis 兼两职：既替代 ConcurrentHashMap 做面试会话缓存（带 TTL、可跨进程），又用 Redis Stream 做简历分析、向量化、题库生成等异步任务的消息队列——不引入 Kafka。
+- S3 兼容对象存储：文件统一走 S3 协议，本地/dev 用 RustFS，生产可换 MinIO 或云厂商，代码零改动。
+- Java 25 虚拟线程：语音面试（WebSocket）与异步任务存在大量 IO 等待，虚拟线程让「每请求一线程」的写法在不爆线程池的前提下扛住并发。
+
+## 5. 落地重难点（结合项目真实踩坑）
+
+下面这些不是「教科书优点」，而是项目里真正卡过人、或写错会直接炸的地方。
+
+### 5.1 向量表必须 Flyway 建，不能交给 Spring AI 自动建
+
+vector_store 表由 Flyway 创建，spring.ai.vectorstore.pgvector.initialize-schema 必须保持 false。否则应用启动时绕过迁移改 schema，与生产「schema 交给 Flyway、ddl-auto: validate」的铁律冲突。难点：H2 + flyway.enabled=false 让 SQL 迁移完全不被单测覆盖，列名写错只有真 Postgres 才暴露——所以任何迁移都得到目标真库跑一次。
+
+### 5.2 异步链路三道关：事务边界 / 无登录上下文 / 幂等
+
+基于 Redis Stream 的异步任务（AbstractStreamProducer / AbstractStreamConsumer 模板）看似简单，落地有三道关：
+
+1. 事务边界：LLM / S3 / 外部 HTTP 调用严禁放在数据库事务内，否则长事务占用连接、超时滚雪球。
+2. 无登录上下文：Stream 消费者线程没有 SecurityContext，需要 user_id 时只能从已加载的主实体取，不能从请求参数拿。
+3. 幂等与重试：基于消息 ID / 主键做幂等；失败自动重试（如简历分析最多 3 次），实体已删除时 ACK 丢弃，避免空转。
+
+### 5.3 统一响应与白名单：一个通配符就让前端逻辑错位
+
+对外一律 Result<T>，全局异常返回 HTTP 200 + 业务码；前端只在 HTTP 401 时清凭证跳登录。SecurityConfig.PUBLIC_ENDPOINTS 只能列具体路径（/api/auth/login、/api/auth/register），不能用 /api/auth/** 通配——否则需要登录的 /api/auth/me 被放行，未登录返回「200 + 14001」，与前端 401 逻辑对不上，登录态判断直接乱掉。
+
+### 5.4 结构化输出必须走统一入口
+
+所有「模型吐固定结构」的场景（评估、切题、角色推断、出题）统一走 StructuredOutputInvoker，业务代码里禁止复制重试/解析逻辑。否则每个 Service 各写一套 JSON 解析与兜底，一旦模型输出格式抖动，故障点会散落在十几处。
+
+### 5.5 推理模型误用会拖垮整条链路（录音复盘教训）
+
+录音复盘三段（切题/角色推断/评估）一度误用默认 doubao-seed-2.1-pro（推理模型），60 段/批思考+输出 >300s，导致整条链路无超时挂起。根因与解法：AI 调用必须按场景分档——高频批处理固定用极速模型（如 doubao-seed-2.0-mini，每批 5–40s），并对三处 LLM 调用都加超时兜底（切题 300s / 评估 600s / 角色推断 120s）。这是「选型不只看能力上限，要看批处理下的稳定性下限」。
+
+### 5.6 前端 SPA：build 不等于类型安全，白屏要真浏览器断言
+
+两个高频坑：
+
+- vite build 不跑 tsc，类型错误不会阻断构建，必须单独 npx tsc --noEmit 才兜得住。
+- 白屏 = #root 无子节点，必须真浏览器断言 root.children.length + pageerror；登录态路由树必须有 * 兜底（游客树一直有），否则部署后整页白屏、本地却正常。
+- 非安全上下文：crypto.randomUUID 只在 HTTPS/localhost 存在，内网 http 下为 undefined，统一用 utils/uuid.ts#randomUuid() 兜底。
+
+### 5.7 WebSocket 鉴权与 CORS：实时链路的两道门
+
+WebSocket 无法带 Header，Token 走 URL ?token=，由 JwtHandshakeInterceptor 校验。跨网络部署时，新域名必须登记 CORS_ALLOWED_ORIGINS（协议+域名+端口全匹配），否则预检失败整站 403，但 SPA 首页仍 200——表现为「打开首页正常、一调接口就挂」，非常迷惑。
+
+### 5.8 多实例蓝绿下的一致性
+
+生产常驻双实例（app-1 / app-2），反向代理无 sticky。早期客服/实时消息用内存态会话注册表，访客与客服的 WS 落在不同实例时，消息只在产生实例内广播，后台收不到。现改为 Redis pub/sub 跨实例分发——这提示：任何「内存态共享」在蓝绿/多实例下都会失效，跨实例状态必须外置到 Redis。
+
+## 6. 设计原则小结
+
+1. 少组件、好部署：PG 兼向量、Redis 兼队列、S3 兼文件。
+2. 异步解耦优先：耗时 AI 任务一律 Stream 化，接口秒回、进度可查。
+3. 统一契约与入口：Result<T>、不可变 record、MapStruct、StructuredOutputInvoker。
+4. schema 可演进：Flyway 增量迁移 + validate，杜绝线上裸建表。
+5. 稳定性看下限：模型分档、超时兜底、幂等重试，比「能力上限」更决定线上表现。

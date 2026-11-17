@@ -1,0 +1,100 @@
+{
+  "$comment": "核心采样渠道。目的不是「多收集」，而是让每个体裁都有可靠的基准——规则误判几乎全部发生在没有基准的体裁上。status 由月度取证任务复盘点检，不要手改。",
+  "dimensions": {
+    "genre": "体裁决定规则阈值（句长下限、段落容忍度、是否要求人声）",
+    "topic": "题材决定词汇分布（玄幻多古语，科技多外来词，财经多数字）",
+    "platform": "平台决定排版惯例（一句一段在起点是常态，在年报里是异常）"
+  },
+  "channels": [
+    {
+      "id": "qidian",
+      "label": "起点中文网",
+      "genre": "webnovel",
+      "topics": ["玄幻", "都市", "历史"],
+      "why": "网文主流平台，一句一段 + 长句流水这两套排版惯例的代表",
+      "sampleFocus": "取叙述段落，不要只取对话——节奏问题主要出在叙述里",
+      "status": "covered",
+      "samples": ["webnovel-handwritten-ch01", "webnovel-xuezhong-ch01"]
+    },
+    {
+      "id": "jinjiang",
+      "label": "晋江文学城",
+      "genre": "webnovel",
+      "topics": ["言情", "古代", "悬疑"],
+      "why": "与起点的读者结构和节奏偏好不同，文风更细，句子更短",
+      "sampleFocus": "心理描写和对话穿插的段落",
+      "status": "empty",
+      "samples": []
+    },
+    {
+      "id": "huxiu",
+      "label": "虎嗅 / 36氪",
+      "genre": "business",
+      "topics": ["科技公司", "产业分析", "IPO 与估值"],
+      "why": "财经自媒体排版惯例的代表：小标题、短段、数据密集、零口语",
+      "sampleFocus": "完整一篇，含小标题结构——结构和排版都是这类稿件的组成部分",
+      "status": "covered",
+      "samples": ["business-huxiu-ipo"]
+    },
+    {
+      "id": "thepaper",
+      "label": "澎湃新闻 / 界面新闻",
+      "genre": "news",
+      "topics": ["时政", "社会", "国际"],
+      "why": "新闻稿的倒金字塔结构和信源规范，与财经分析完全不同",
+      "sampleFocus": "含信源标注和多方引述的完整报道",
+      "status": "empty",
+      "samples": []
+    },
+    {
+      "id": "wechat-opinion",
+      "label": "头部公众号（评论类）",
+      "genre": "commentary",
+      "topics": ["社会评论", "职场", "文化"],
+      "why": "评论要有个人立场和人声，是检验「人声要求」这条规则的主要场景",
+      "sampleFocus": "有明确作者观点和第一人称的成篇评论",
+      "status": "empty",
+      "samples": []
+    },
+    {
+      "id": "bilibili-script",
+      "label": "B站知识区口播稿 / 播客文字稿",
+      "genre": "script",
+      "topics": ["科普", "访谈", "时事解读"],
+      "why": "句长下限最低的一类，用来验证 script 文体画像没有把正常口播判成碎片化",
+      "sampleFocus": "实际念出来的稿子，不是视频简介——后者的文风和节奏完全不同",
+      "status": "empty",
+      "samples": []
+    },
+    {
+      "id": "annual-report",
+      "label": "上市公司年报 / 招股书",
+      "genre": "report",
+      "topics": ["财务披露", "风险因素", "公司治理"],
+      "why": "长句、完整句、无主语句的极端样本，用来验证 report 文体不会把规范当缺陷",
+      "sampleFocus": "风险因素章节——这类文本句式最模板化，但那是法律要求，不是毛病",
+      "status": "empty",
+      "samples": []
+    },
+    {
+      "id": "tech-docs",
+      "label": "官方技术文档 / 技术博客",
+      "genre": "tech",
+      "topics": ["框架文档", "实践总结", "踩坑记录"],
+      "why": "第二人称、步骤化、代码块混排，是另一套完全不同的排版逻辑",
+      "sampleFocus": "含命令和代码块的操作章节",
+      "status": "empty",
+      "samples": []
+    },
+    {
+      "id": "gov-notice",
+      "label": "政府公开文件 / 政策通知",
+      "genre": "report",
+      "topics": ["政策文件", "通知公告"],
+      "why": "与年报同属 report，但句式和词汇更刻板，可以验证同一文体内的变体差异",
+      "sampleFocus": "正文条款部分",
+      "status": "empty",
+      "samples": []
+    }
+  ]
+}

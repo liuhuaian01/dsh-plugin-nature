@@ -1,0 +1,43 @@
+用 Node.js 写一个扛并发的 HTTP 服务
+
+环境：Node 22，Linux，不装框架，只用内置 http 模块。预期结果是一台 4 核机器上稳定扛住 5000 个并发连接。
+
+一、为什么不用框架
+
+express 的中间件是同步串行的，每个请求都要过一遍。5000 并发下，光中间件链就吃掉四成 CPU。原生 http 模块直接拿到 req 和 res，少一层。
+
+二、起项目
+
+目录分三层：routes 放入参校验和响应格式，service 放业务逻辑，db 放查询。三层之间只用函数传参，不互相 import 对方的实现。
+
+三、起服务
+
+import { createServer } from "node:http";
+const server = createServer(async (req, res) => {
+try {
+const out = await route(req);
+res.writeHead(200, { "content-type": "application/json" });
+res.end(JSON.stringify(out));
+} catch (err) {
+res.writeHead(500);
+res.end('{"error":"internal"}');
+console.error(req.method, req.url, err);
+}
+});
+server.listen(3000);
+
+四、性能的三条线
+
+连接池：查库必走池。默认每进程 10 条连接，4 核就是 40 条，够用。
+
+缓存：只缓存读多写少的数据。缓存时间别设长，30 秒就够，长了用户看到旧数据。
+
+超时：所有外部调用都要设超时，不设的话一个慢查询能把整个进程拖死。默认 3 秒，重试两次。
+
+五、部署
+
+PM2 起多进程，按核数起，4 核起 4 个。
+
+六、出问题先查什么
+
+连接数满了，先看 pg_stat_activity，多半是没释放连接。内存一直涨，先看是不是缓存没设上限。响应变慢，先看日志里哪个接口的 P99 涨了。

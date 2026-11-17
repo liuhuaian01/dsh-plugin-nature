@@ -1,0 +1,645 @@
+{
+  "$comment": "回归语料清单。改任何规则之后先跑 test/regression.mjs——这里的每一条都对应一次真实的误判，是防止重蹈覆辙的底线。",
+  "samples": [
+    {
+      "file": "webnovel-handwritten-ch01.txt",
+      "genre": "webnovel",
+      "platform": "起点",
+      "topic": "古代宫廷玄幻",
+      "source": "用户手写",
+      "date": "2026-10-13",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "rhythm-fragmented",
+          "rhythm-too-short",
+          "rhythm-one-sentence-paragraph"
+        ]
+      },
+      "history": "纯手写。首轮被误判 40 分 C 级（『明显的 AI 腔』），主因是一句一段占 74% 被当成问题、以及省略号切分 bug。"
+    },
+    {
+      "file": "webnovel-xuezhong-ch01.txt",
+      "genre": "webnovel",
+      "platform": "纵横中文网",
+      "topic": "武侠玄幻",
+      "source": "《雪中悍刀行》开篇，公开出版作品",
+      "date": "2026-10-13",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "rhythm-fragmented",
+          "rhythm-too-short"
+        ]
+      },
+      "history": "专业作家成名作。两次被误报：一次是港台用词表把『立马』列了进去，一次是重复检测把开篇与结尾的刻意呼应当成拼接。"
+    },
+    {
+      "file": "business-huxiu-ipo.txt",
+      "genre": "business",
+      "platform": "虎嗅",
+      "topic": "科技财经 / IPO 估值",
+      "source": "虎嗅官方编辑撰写",
+      "date": "2026-10-13",
+      "expect": {
+        "maxScore": 25
+      },
+      "history": "被误判 32 分 B 级：一句一段（财经稿标准排版）扣 14 分，『没有口语与个人视角』（财经稿的规范）扣 6 分。剩下 12 分是『值得注意的是』这类行业套话。"
+    },
+    {
+      "file": "template-ai-sample.txt",
+      "genre": "general",
+      "platform": "构造（负样本）",
+      "topic": "构造对照样本",
+      "source": "手工构造",
+      "date": "2026-10-13",
+      "expect": {
+        "minScore": 60,
+        "mustHit": [
+          "boilerplate-connector",
+          "elevating-ending",
+          "era-backdrop"
+        ]
+      },
+      "history": "负样本对照：确保规则在防止误报的同时没有丧失检出能力。platform 原为「-」，在按平台分组做区分度统计时被误当成真人稿（它的 jargon 密度 16.0/千字，是人工堆出来的）。"
+    },
+    {
+      "file": "news-game-license.txt",
+      "genre": "news",
+      "platform": "-",
+      "topic": "产业消息稿",
+      "source": "按新华社消息体写法构造",
+      "date": "2026-10-30",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "rhythm-uniform-long"
+        ]
+      },
+      "history": "首跑 21 分 B 级：只有 11 句，句长变异系数 0.348 掉到 0.35 线下面，被判「句子长度过于整齐」。消息稿本来句式就规整，加上十来句的样本算不出稳定的变异系数。句数门槛提到 20 后归零。"
+    },
+    {
+      "file": "report-annual-summary.txt",
+      "genre": "report",
+      "platform": "-",
+      "topic": "年度工作总结",
+      "source": "按企业内部报告写法构造",
+      "date": "2026-10-30",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "enumeration"
+        ]
+      },
+      "history": "「第一，……第二，……」在报告里是标准结构，被枚举规则扣分。给 enumeration 加了 report/tech/proposal/business 排除。"
+    },
+    {
+      "file": "tech-design-notes.txt",
+      "genre": "tech",
+      "platform": "-",
+      "topic": "技术设计笔记",
+      "source": "按工程博客写法构造",
+      "date": "2026-10-30",
+      "expect": {
+        "maxScore": 15
+      },
+      "history": "首跑 12 分：文中引用「值得注意的是」「综上所述」当反面例子，被当成实际使用。加了引号内容遮蔽后归零——引用不是使用。"
+    },
+    {
+      "file": "script-share-speech.txt",
+      "genre": "script",
+      "platform": "-",
+      "topic": "分享会口播",
+      "source": "按内部演讲逐字稿写法构造",
+      "date": "2026-10-30",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "not-but"
+        ]
+      },
+      "history": "口播里「不是……而是……」是常用的强调手法，被对举规则按书面语标准扣了 7.4 分。改成密度判定并按文体给门槛后降到 5 分。"
+    },
+    {
+      "file": "commentary-anime-industry.txt",
+      "genre": "commentary",
+      "platform": "-",
+      "topic": "动画产业评论",
+      "source": "按产业评论写法构造",
+      "date": "2026-10-30",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "dash-overuse",
+          "de-chain"
+        ]
+      },
+      "history": "首跑 19 分 B 级临界：破折号 4 次（评论的正常节奏工具）扣 6.5 分，顿号排比「底子是人的经验、是项目的积累」被当成「的」字长链。分别加了文体阈值和顿号排除后降到 8 分。"
+    },
+    {
+      "file": "fiction-kongyiji.txt",
+      "genre": "fiction",
+      "platform": "-",
+      "topic": "短篇小说",
+      "source": "鲁迅《孔乙己》，1919 年，公版",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "rhythm-consecutive-short"
+        ]
+      },
+      "history": "首跑 14 分：段末那串问答「后来呢？」「后来打折了腿了。」连着六句都不到十个字，被当成碎片流。对话天生就短，连续短句统计现在跳过引号起头的句子。"
+    },
+    {
+      "file": "commentary-rmrb-livelihood.txt",
+      "genre": "commentary",
+      "platform": "人民日报",
+      "topic": "民生",
+      "source": "人民日报评论部《「民生为大」，书写人民至上新答卷》，2024-12-31",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 25,
+        "mustNotHit": [
+          "rhythm-duplicate-passage",
+          "translationese"
+        ]
+      },
+      "history": "首跑 17 分：开头两句提要导语在正文里又展开一遍，被当成复读——报纸体例，news/commentary/business 现在豁免「开头 vs 后面」这一种重复对；「与民生相关的新规」里的「相关的」是正常中文，已从翻译腔词表删掉。剩 14 分是评论部本身的黑话密度（出发点、发力点、数字赋能、获得感），判得对。"
+    },
+    {
+      "file": "news-xinhua-ai-conference.txt",
+      "genre": "news",
+      "platform": "新华网",
+      "topic": "科技 / 产业会议",
+      "source": "新华网《助推「人工智能+」产业融合 2025数智科技创新发展大会举办》，2025-12-05，记者朱家齐",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 25
+      },
+      "history": "会议通稿体：每个嘉宾一段，全篇「表示／认为／指出」反复出现。首跑 17 分 A 级，只命中 jargon（赋能、落地、生态、底座）——通稿本身也是空话，判得对。要保的是「没有把通稿的固有写法误判成模板腔」：一段一嘉宾、通篇转述句式、大段头衔都没被扣分。"
+    },
+    {
+      "file": "proposal-miit-carbon-policy.txt",
+      "genre": "proposal",
+      "platform": "工信部",
+      "topic": "政策实施方案",
+      "source": "工信部《加快构建工业和信息化领域碳排放双控工作体系实施方案（2026—2030年）》，工信部节函〔2026〕343号",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 10,
+        "mustNotHit": [
+          "list-overuse",
+          "colon-list"
+        ]
+      },
+      "history": "政府方案体：总体要求 + 五大任务 + 十五条编号措施，结尾保障。proposal / report / business 三个文体都是 0 分 A 级。验证了 list-overuse 与 colon-list 的 exceptGenres 对 proposal 确实生效——方案策划用编号列表是标准写法，不是套话。"
+    },
+    {
+      "file": "script-lisufu-tsinghua-speech.txt",
+      "genre": "script",
+      "platform": "清华大学经管学院",
+      "topic": "毕业典礼演讲",
+      "source": "李书福 2024 年清华经管学院毕业典礼演讲实录",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 15,
+        "mustNotHit": [
+          "rhythm-subject-repeat",
+          "de-chain"
+        ]
+      },
+      "history": "首跑 28 分 B 级，三项全是误判：主语反复重复 14 分（讲自己经历，「我」连着起头是必然）、「的」字长链 9.6 分（边说边想，「中国的碳排放权的价格」是即时组织的产物）、公文式过渡语 4.8 分（「总而言之」真人就这么说）。口播稿的主语门槛放到 8，de-chain 对 script 豁免后降到 5 分——剩的就是「总而言之」，留作提示。"
+    },
+    {
+      "file": "media-caijing-ai-2026.txt",
+      "genre": "media",
+      "platform": "公众号「财经」/ 36氪转载",
+      "topic": "AI 产业年度展望",
+      "source": "《财经》新媒体《2026展望：资本加速AI应用落地，科技巨头不再「炫技」》，2026-01-04，作者舒志娟",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 25,
+        "mustNotHit": [
+          "rhythm-duplicate-passage"
+        ]
+      },
+      "history": "首跑 14 分 A 级：开头一句提要（「当单一技术优势难以通吃……」）在第四段完整重复了一遍，被判成复读——公众号推文和报纸一样，开头先撂一句结论再从头讲。media 加进 HEADLINE_GENRES 后只剩 jargon 22 次（落地、生态、闭环、壁垒、飞轮、护城河）。这 14 分判得对，那篇确实黑话密集。 第十二轮把 density 类规则的满分线从「超阈值一倍」提到「两倍」之后，这篇从 14 涨到 22——涨的那 8 分全在 jargon 上（「生态」「闭环」「壁垒」「飞轮」「护城河」21 次，5.7/千字）。判得对：这篇确实黑话密集，只是原来「刚好超线」和「十处黑话」同分。expect 相应从 20 放到 25。"
+    },
+    {
+      "file": "report-gov-work-2026.txt",
+      "genre": "report",
+      "platform": "中国网（中英对照）",
+      "topic": "政府工作报告",
+      "source": "2026年政府工作报告全文，李强 2026-03-05 在十四届全国人大四次会议上作；中国网 2026-03-19 双语页面左列中文，原页面被截断，只取到 2026 年任务部分之前",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 10,
+        "mustNotHit": [
+          "rhythm-duplicate-passage"
+        ]
+      },
+      "history": "中英对照表格，提中文列得到 48 段 11582 字。首跑 5 分 A 级，命中 jargon(15)（判得对：新质生产力、内生动力、政策取向这套词确实密集）与 rhythm-duplicate-passage(5)。查那 5 对——没有一对是真复读：有共享「以习近平同志为核心的党中央团结带领全国各族人民」25 字套语的，有根本不相干却共享 18 字公文短语的。根因在检测算法：任意 18 字连续相同就算重复，而公文里 18 字的固定搭配遍地都是。改成「共用片段至少占较短那句一半」后清零，其余语料零回归。"
+    },
+    {
+      "file": "tech-juejin-architecture.txt",
+      "genre": "tech",
+      "platform": "掘金",
+      "topic": "技术栈与架构选型",
+      "source": "掘金《技术栈与架构选型：面试侠为什么是这一套》，作者掘金用户007，2026-10-29",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 10
+      },
+      "history": "首跑 8 分 A 级，只有 jargon 一项，命中「心智」「落地」「链路」。「链路」在技术语境是术语（异步链路、整条链路），不是黑话，从 jargon 词表删掉，只留「全链路」——那一对在营销文案里几乎总是成套出现。删后 1 分 A 级，剩「心智」1 次、「落地」2 次，判得对。"
+    },
+    {
+      "file": "ai-report-baseline.txt",
+      "genre": "report",
+      "platform": "构造（模型默认输出）",
+      "topic": "季度运营报告",
+      "source": "按一份普通季度运营报告的题目，用模型默认写法生成，不加任何风格要求。这是第一条「正样本」：其余 17 条都是真人写的",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 40
+      },
+      "history": "8 → 22 → 54 → 99（E 级）。上一轮补的七条（padding-adverb 等）把它从 8 抬到 54；这一轮 density 封顶放宽后到 99。99 分不是过度：这段 295 字里八类套话全中，是标准模板文。"
+    },
+    {
+      "file": "ai-fiction-baseline.txt",
+      "genre": "fiction",
+      "platform": "构造（模型默认输出）",
+      "topic": "fiction 默认写法",
+      "source": "按该文体的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 40
+      },
+      "history": "12 → 36 → 72（D 级）。首跑 8 分 A，漏掉的是开场「望着窗外繁华的都市夜景，心中思绪万千」、中场「时间仿佛静止了」、收尾「生活就是这样，给了你遗憾，也给了你希望」。补 emotion-cliche / dramatic-pause / life-philosophy 三条后升到 36；把 density 满分线从「超阈值一倍」提到两倍后升到 72——这篇里这三类套话密集，原来封顶 8 分挡住了。"
+    },
+    {
+      "file": "ai-script-baseline.txt",
+      "genre": "script",
+      "platform": "构造（模型默认输出）",
+      "topic": "script 默认写法",
+      "source": "按该文体的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 40
+      },
+      "history": "24 → 40 → 67（D 级）。首跑 24 分 B，只命中 enumeration（首先/其次/最后）。漏掉的是「大家好，欢迎来到本期」「今天我们来聊聊」「希望今天的分享对你有所帮助，我们下期再见」。补 video-opening / video-outro。"
+    },
+    {
+      "file": "ai-news-baseline.txt",
+      "genre": "news",
+      "platform": "构造（模型默认输出）",
+      "topic": "news 默认写法",
+      "source": "按该文体的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 22
+      },
+      "history": "7 → 19 → 31（B 级）。首跑 7 分 A，几乎全漏。命中补上的是「相关负责人表示」「据悉」这类没有名字的信源（vague-source），和「成功举办」「圆满落幕」（boilerplate-success）。首段「近日」和「成功举办」是同一件事的两面：真新闻给日期和到场人数，AI 稿给「近日」和「成功」。"
+    },
+    {
+      "file": "ai-media-baseline.txt",
+      "genre": "media",
+      "platform": "构造（模型默认输出）",
+      "topic": "media 默认写法",
+      "source": "按该文体的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 25
+      },
+      "history": "10 → 26 → 39（B 级）。首跑 10 分 A。补 relatable-opening（「不知道你有没有这种感觉」）之后升到 26；note 这条稿子里「点赞收藏」「关注我」也被 video-outro 抓到——自媒体和口播共用同一套收尾。"
+    },
+    {
+      "file": "ai-commentary-baseline.txt",
+      "genre": "commentary",
+      "platform": "构造（模型默认输出）",
+      "topic": "commentary 默认写法",
+      "source": "按该文体的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 25
+      },
+      "history": "18 → 31 → 38（B 级）。首跑 18 分 A，只命中 adjective-stack。补 both-reasonable（「这两种观点都有其合理性」）与 think-aloud（「这也让我们不禁思考」）。这两句是评论腔的核心：先摆两边，再把问题丢给读者。"
+    },
+    {
+      "file": "ai-tech-baseline.txt",
+      "genre": "tech",
+      "platform": "构造（模型默认输出）",
+      "topic": "tech 默认写法",
+      "source": "按该文体的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 25
+      },
+      "history": "21 → 29 → 45（C 级）。首跑 21 分 B（jargon 1 次）。补 article-meta（「本文将介绍」「总结一下」）后到 29；「最后，关于部署」这类「首先/其次/然后/最后」靠已有的 enumeration 抓。 删除「段落长度过于均匀」判据后 45 → 29，minScore 随之从 30 调到 25——调低不是放水，是那条判据本身被证伪了（见 scan.js 的注释与 README）。29 分仍是 B 级，仍高于改后稿的 0 分。"
+    },
+    {
+      "file": "ai-proposal-baseline.txt",
+      "genre": "proposal",
+      "platform": "构造（模型默认输出）",
+      "topic": "proposal 默认写法",
+      "source": "按该文体的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」",
+      "date": "2026-10-31",
+      "expect": {
+        "minScore": 18
+      },
+      "history": "15 → 15 → 23（B 级）。首跑 15 分 A，只命中 inflated-degree(1) 和 jargon(1)——可那段 481 字的方案稿里有 10 处营销黑话（品牌调性、话题矩阵、声量、私域、公域、情感共鸣、触达、品效合一）。根因是 jargon 词表没有营销圈那一套，补了 20 个词；另一个根因是 density 类规则封顶太早——20.8/千字和 1.6/千字拿同样的 8 分。改成两倍封顶后到 23。"
+    },
+    {
+      "file": "rewritten-news.txt",
+      "genre": "news",
+      "platform": "构造（照处方改写）",
+      "topic": "新华社消息改写",
+      "source": "拿对应的 ai-*-baseline.txt，不看规则、只按 nature 报出的处方改写。这是反向验证样本：处方管不管用，看这一份能不能回到 A 级",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "47 → 0（A 级）。第二十轮八文体闭环：按处方改完之后能回到 0 分，说明处方指向的确实是问题本身，不是「把这些词换掉」。这份同时也是新的误报来源——改好的稿子最容易撞到规则没想到的用法，本轮就撞出四处：落地窗被当黑话、破折号被当「的」字长链、「也就是说」被当公文过渡语、扣分并列的倍数提示挂错行。"
+    },
+    {
+      "file": "rewritten-script.txt",
+      "genre": "script",
+      "platform": "构造（照处方改写）",
+      "topic": "知识分享口播稿改写",
+      "source": "拿对应的 ai-*-baseline.txt，不看规则、只按 nature 报出的处方改写。这是反向验证样本：处方管不管用，看这一份能不能回到 A 级",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "72 → 0（A 级）。第二十轮八文体闭环：按处方改完之后能回到 0 分，说明处方指向的确实是问题本身，不是「把这些词换掉」。这份同时也是新的误报来源——改好的稿子最容易撞到规则没想到的用法，本轮就撞出四处：落地窗被当黑话、破折号被当「的」字长链、「也就是说」被当公文过渡语、扣分并列的倍数提示挂错行。"
+    },
+    {
+      "file": "rewritten-media.txt",
+      "genre": "media",
+      "platform": "构造（照处方改写）",
+      "topic": "自媒体推文改写",
+      "source": "拿对应的 ai-*-baseline.txt，不看规则、只按 nature 报出的处方改写。这是反向验证样本：处方管不管用，看这一份能不能回到 A 级",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "55 → 0（A 级）。第二十轮八文体闭环：按处方改完之后能回到 0 分，说明处方指向的确实是问题本身，不是「把这些词换掉」。这份同时也是新的误报来源——改好的稿子最容易撞到规则没想到的用法，本轮就撞出四处：落地窗被当黑话、破折号被当「的」字长链、「也就是说」被当公文过渡语、扣分并列的倍数提示挂错行。"
+    },
+    {
+      "file": "rewritten-fiction.txt",
+      "genre": "fiction",
+      "platform": "构造（照处方改写）",
+      "topic": "都市小说片段改写",
+      "source": "拿对应的 ai-*-baseline.txt，不看规则、只按 nature 报出的处方改写。这是反向验证样本：处方管不管用，看这一份能不能回到 A 级",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "69 → 0（A 级）。第二十轮八文体闭环：按处方改完之后能回到 0 分，说明处方指向的确实是问题本身，不是「把这些词换掉」。这份同时也是新的误报来源——改好的稿子最容易撞到规则没想到的用法，本轮就撞出四处：落地窗被当黑话、破折号被当「的」字长链、「也就是说」被当公文过渡语、扣分并列的倍数提示挂错行。"
+    },
+    {
+      "file": "rewritten-commentary.txt",
+      "genre": "commentary",
+      "platform": "构造（照处方改写）",
+      "topic": "产业评论改写",
+      "source": "拿对应的 ai-*-baseline.txt，不看规则、只按 nature 报出的处方改写。这是反向验证样本：处方管不管用，看这一份能不能回到 A 级",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "37 → 0（A 级）。第二十轮八文体闭环：按处方改完之后能回到 0 分，说明处方指向的确实是问题本身，不是「把这些词换掉」。这份同时也是新的误报来源——改好的稿子最容易撞到规则没想到的用法，本轮就撞出四处：落地窗被当黑话、破折号被当「的」字长链、「也就是说」被当公文过渡语、扣分并列的倍数提示挂错行。"
+    },
+    {
+      "file": "rewritten-tech.txt",
+      "genre": "tech",
+      "platform": "构造（照处方改写）",
+      "topic": "工程笔记改写",
+      "source": "拿对应的 ai-*-baseline.txt，不看规则、只按 nature 报出的处方改写。这是反向验证样本：处方管不管用，看这一份能不能回到 A 级",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "50 → 0（A 级）。第二十轮八文体闭环：按处方改完之后能回到 0 分，说明处方指向的确实是问题本身，不是「把这些词换掉」。这份同时也是新的误报来源——改好的稿子最容易撞到规则没想到的用法，本轮就撞出四处：落地窗被当黑话、破折号被当「的」字长链、「也就是说」被当公文过渡语、扣分并列的倍数提示挂错行。"
+    },
+    {
+      "file": "rewritten-proposal.txt",
+      "genre": "proposal",
+      "platform": "构造（照处方改写）",
+      "topic": "营销方案改写",
+      "source": "拿对应的 ai-*-baseline.txt，不看规则、只按 nature 报出的处方改写。这是反向验证样本：处方管不管用，看这一份能不能回到 A 级",
+      "date": "2026-10-31",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "35 → 0（A 级）。第二十轮八文体闭环：按处方改完之后能回到 0 分，说明处方指向的确实是问题本身，不是「把这些词换掉」。这份同时也是新的误报来源——改好的稿子最容易撞到规则没想到的用法，本轮就撞出四处：落地窗被当黑话、破折号被当「的」字长链、「也就是说」被当公文过渡语、扣分并列的倍数提示挂错行。"
+    },
+    {
+      "file": "rewritten-report.txt",
+      "genre": "report",
+      "platform": "构造（照处方改写）",
+      "topic": "季度运营复盘",
+      "source": "E:/Natredo/nature-check/report-rewritten.txt（2026-10 按处方改写 ai-report-baseline）",
+      "date": "2026-11-02",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "补第八个文体的改写闭环。其余七个文体的 rewritten-* 都在，只缺 report。原稿 ai-report-baseline 72 分 → 改后 7 分 A。这 7 分全部来自「段落长度过于均匀」的误报（段长变异系数 0.24 < 0.32），不是任何规则命中——正是它让这条判据的证伪实验启动，判据删除后改后稿 0 分。要求 0 分是硬判据：任何非零都是误报。"
+    },
+    {
+      "file": "general-rmrb-essay-prairie.txt",
+      "genre": "general",
+      "platform": "真人",
+      "topic": "散文随笔（第一人称叙述）",
+      "source": "人民日报 2026-08-02 第07版 人文茶座《大地的恩赐》，作者艾平（第九届鲁迅文学奖散文杂文奖获得者）",
+      "date": "2026-11-02",
+      "expect": {
+        "maxScore": 10
+      },
+      "history": "补 general 的真人基准——2026-11 月度取证报告指出 general 真人样本为 0，而它是用户不指定体裁时的默认路径。首跑 26 分 B，命中三处：主语反复重复 14 分（连三句以「我」开头，但每句九十多字）、句子普遍过长 8 分（平均 90.7 字）、超长句占比过高 4 分。三处全是误报，逼出两条判据修改：主语连排只数短句；长句只在逗号少时才算欧化（这篇逗号句号比 4.19，是流水句）。改后 0 分。"
+    },
+    {
+      "file": "general-hubeidaily-essay-100th.txt",
+      "genre": "general",
+      "platform": "真人",
+      "topic": "散文随笔（第一人称，带对话）",
+      "source": "湖北日报客户端 2025-06-19《散文随笔｜陈响平：百篇落墨初启航》，作者陈响平",
+      "date": "2026-11-02",
+      "expect": {
+        "maxScore": 10
+      },
+      "history": "同上，补 general 真人基准。这份带大量直接引语和口语（「你说得也有道理」「可有啥用」「可实在没法认同」），首跑就是 1 分，只命中一条 both-and 0.7 分——说明「既……又……」这类对举在真实散文里也会出现，只是稀疏。"
+    },
+    {
+      "file": "general-kepuchina-static.txt",
+      "genre": "general",
+      "platform": "真人",
+      "topic": "科普说明文（面向普通读者）",
+      "source": "科普中国网《静电原理在生活中的应用》，科普中国-绿色双碳原创，2021-12-31",
+      "date": "2026-11-02",
+      "expect": {
+        "maxScore": 25
+      },
+      "history": "同上，补 general 真人基准。首跑 18 分 A：缺少具体信息锚点 10 分（全篇没有数字、引语、时间——这条判得对，是真的抽象）、「有着……的」5.8 分（「也有着非常大的价值」，偏木但不算错）、jargon 2.5 分（「沉淀」在这里是物理义「沉淀在材料表面」，不是营销黑话，属题材词汇误判）。三处都留着没改：前两条是真信号，第三条只是 2.5 分。"
+    },
+    {
+      "file": "ai-business-baseline.txt",
+      "genre": "business",
+      "platform": "构造（模型默认输出）",
+      "topic": "财经分析（Anthropic 估值争议）",
+      "source": "按 business 的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」。题目与真人稿 business-huxiu-ipo 是同一件事，便于对照。",
+      "date": "2026-11-02",
+      "expect": {
+        "minScore": 45
+      },
+      "history": "补 business 的 AI 基线——2026-11 月度取证报告指出 business 只有真人侧、没有 AI 侧，等于只验「不该报的没报」。首跑就是 61 分 D，八条全中：模糊信源、意义拔高、公文式过渡语、空转副词、黑话、强行升华、自省腔、滥用「我们」，加结构性扣分「缺少具体信息锚点」。不需要改规则，规则本来就抓得到。"
+    },
+    {
+      "file": "ai-webnovel-baseline.txt",
+      "genre": "webnovel",
+      "platform": "构造（模型默认输出）",
+      "topic": "玄幻网文章节（突破 + 遇袭）",
+      "source": "按 webnovel 的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明「该报的报了」。",
+      "date": "2026-11-02",
+      "expect": {
+        "minScore": 30
+      },
+      "history": "补 webnovel 的 AI 基线。首跑只有 11 分 A——严重漏检。真人网文（雪中 23570 字、手写 4258 字）逐条测了八个候选腔调，全部零命中，而模型稿里八条全中：眼中闪过一丝、嘴角勾起一抹弧度、不由得深吸一口气、心中暗道、瞳孔骤然收缩、而这一切才刚刚开始、就在这时、一切都将不同。据此新增八条「网文腔」规则，11 → 38 分 B。"
+    },
+    {
+      "file": "ai-general-baseline.txt",
+      "genre": "general",
+      "platform": "构造（模型默认输出）",
+      "topic": "日常说明文（如何提高阅读效率）",
+      "source": "按 general 的普通题目，用模型默认写法生成，不加任何风格要求。这是正样本：证明默认文体的「该报的报了」这一侧也成立。",
+      "date": "2026-11-02",
+      "expect": {
+        "minScore": 45
+      },
+      "history": "补 general 的 AI 基线——它是用户不指定体裁时的默认路径，之前只有真人侧，等于默认路径能不能抓 AI 一直没验过。首跑就是 67 分 D，八条全中：万能开场背景、公文式过渡语、首先其次最后、概括性形容词、滥用「我们」、结尾强行升华、程度副词虚高、视频腔尾巴。不需要改规则。至此 11 个文体全部有了真人侧和模型侧。"
+    },
+    {
+      "file": "rewritten-webnovel.txt",
+      "genre": "webnovel",
+      "platform": "构造（照处方改写）",
+      "topic": "网文章节（突破 + 遇袭）",
+      "source": "据 38 分级的模型默认稿，只用报告的改写处方改出来，不看规则。",
+      "date": "2026-11-02",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "据 ai-webnovel-baseline.txt 改写，不看规则、只按报告处方动手：把八条网文腔（眼中闪过一丝 / 嘴角勾起一抹弧度 / 不由得深吸一口气 / 瞳孔骤然收缩 / 时间仿佛静止 / 这一切才刚刚开始 / 一切都将不同 / 就在这时）全部换成身体动作和具体物件——头发被割断落在脚边、手心出汗、刀换到另一只手、闻见草药味，结尾的钩子从「才刚刚开始」换成山下的火光一点一点亮起来。 这份要 0 分，任何非零都算误报。"
+    },
+    {
+      "file": "rewritten-general.txt",
+      "genre": "general",
+      "platform": "构造（照处方改写）",
+      "topic": "日常说明文（如何提高阅读效率）",
+      "source": "据 67 分级的模型默认稿，只用报告的改写处方改出来，不看规则。",
+      "date": "2026-11-02",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "据 ai-general-baseline.txt 改写：删「在当今这个信息爆炸的时代」开场、「首先其次第三」、「值得一提的是」、「总的来说」、「让我们共同努力，遇见更好的自己」、以及整段未来展望。结论挪到第一句，三条做法各配一个能立刻执行的动作（先写一行「我想知道什么」/ 每节用一句话复述 / 隔一天再回想），结尾收在「读完这本，你能拿它做什么」。 这份要 0 分，任何非零都算误报。"
+    },
+    {
+      "file": "rewritten-business.txt",
+      "genre": "business",
+      "platform": "构造（照处方改写）",
+      "topic": "财经短评（Anthropic 估值争议）",
+      "source": "据 61 分级的模型默认稿，只用报告的改写处方改出来，不看规则。",
+      "date": "2026-11-02",
+      "expect": {
+        "maxScore": 0
+      },
+      "history": "据 ai-business-baseline.txt 改写：删「近年来随着…深刻变革」、三组「从…来看」、一方面另一方面、业内人士指出、总的来说、让我们共同期待。改成先说「报道里能确认的只有两件事」，把估值口径 / 收入续约 / 推理成本三个变量逐个说清，最后一段写「我这套说法最容易错在哪」。原文一句数字都没有，所以改写也不编数字，而是说清楚「这些数只在招股书里」。 这份要 0 分，任何非零都算误报。"
+    },
+    {
+      "file": "script-leijun-annual-speech-2025.txt",
+      "genre": "script",
+      "platform": "真人",
+      "topic": "企业家年度演讲逐字稿",
+      "source": "投资界 https://news.pedaily.cn/202509/555337.shtml，雷军 2025 年第六次年度演讲（2025-09-25），10528 字 / 324 句 / 180 段。",
+      "date": "2025-09-25",
+      "expect": {
+        "maxScore": 10
+      },
+      "history": "第二份真实口语稿，也是最长的一份。首跑 script 0 分 A，零命中；general / commentary 9 分，只有 de-chain（口播豁免已生效，换文体才报）。故意选它是因为它跟李书福那篇完全不同的口语：大量「大家想想看」「咋办呢」「实话实说」「你们知道原因吗」，还有一处自问自答和一处括号里的旁白。这份要是被误判，「口头表达」那半边就站不住。"
+    },
+    {
+      "file": "ai-script-speech-register.txt",
+      "genre": "script",
+      "platform": "构造（模型默认输出）",
+      "topic": "内部演讲（AI 与工作）",
+      "source": "按「年度演讲」这个亚型写：开场只有「各位同事，大家好」，结尾只有「谢谢大家」，不出现视频腔开场与下期再见。",
+      "date": "2026-11-02",
+      "expect": {
+        "minScore": 50
+      },
+      "history": "用来验证口播稿那套规则不是靠 video-opening / video-outro 撑着的。这两个词一个都没用，仍然 74 分 D：结尾升华、万能背景、不仅而且、首先其次最后、程度副词虚高、滥用「我们」六条各就各位。"
+    },
+    {
+      "file": "ai-report-closure-subtype.txt",
+      "genre": "report",
+      "platform": "构造（模型默认输出）",
+      "topic": "项目结项报告（数字化运营）",
+      "source": "按该文体的第二个亚型、不加任何风格要求写，用来验证规则不是只认得第一份模型稿。",
+      "date": "2026-11-02",
+      "expect": {
+        "minScore": 35
+      },
+      "history": "同一个文体的第二个亚型。原来的 ai-report-baseline 是「季度运营复盘」，这份是「项目结项报告」，格式更像公文：四章、每章两三句、「一是二是三是」。首跑 48 分 C，七条命中（稳步推进 / 下一步我们 / 系统的 / 进行了系统性的梳理 / 中台 / 系统性 / 清醒地认识到）。比复盘那篇低很多，原因是这篇更短、命中的类目更少——不是它写得更像人。 首跑 48 分。"
+    },
+    {
+      "file": "ai-proposal-launch-subtype.txt",
+      "genre": "proposal",
+      "platform": "构造（模型默认输出）",
+      "topic": "新品上市整合营销策划案",
+      "source": "按该文体的第二个亚型、不加任何风格要求写，用来验证规则不是只认得第一份模型稿。",
+      "date": "2026-11-02",
+      "expect": {
+        "minScore": 15
+      },
+      "history": "同一个文体的第二个亚型。原来那份是品牌营销方案，这份是新品上市策划案（六章 + 编号列表 + 三阶段传播节奏）。首跑只有 22 分 B，命中两条：品牌调性（jargon 封顶 16）、日益（程度副词 6.3）。这份稿子通篇是空话——没有预算、没有说清放弃什么、没有一句可核对的事实——但规则查不出来，因为方案文体的「空」恰好长在规则没有覆盖的位置。这个 22 分是本轮最该记住的一件事。 首跑 22 分。"
+    },
+    {
+      "file": "business-brand-retail-channel.txt",
+      "genre": "business",
+      "platform": "真人",
+      "source": "搜狐 · 品牌资产与跨平台运营分析（2026）",
+      "expect": {
+        "maxScore": 25
+      },
+      "history": "首跑 16 分 A（jargon 29 次 / 7.38 每千字，单项封顶 16）。这份稿子黑话密度是真的高——触达 7、声量 6、心智 5、种草 5、全域 4——但它确实是真人写的商业分析，不是 AI 稿。加进来是为了验证「专业领域用本行词汇」不会把分数拉到 D/E；也因为它，才发现按总次数判删词是错的判据（见 rules.js 的注释）。"
+    },
+    {
+      "file": "tech-neo-unify-blog.txt",
+      "genre": "tech",
+      "platform": "真人",
+      "source": "极客公园 · 商汤技术博客（NEO-unify 原生多模态模型）",
+      "expect": {
+        "maxScore": 30
+      },
+      "history": "首跑 25 分 B（jargon 12 次 / 5.89 每千字，主要是端到端 8 次 + 范式 3 次；另有 elevating-ending 9 分「开启全新范式」）。技术博客用「端到端」是行话不是黑话，这条留作 jargon 在 tech 阈值 2.0 下的边界样本。"
+    },
+    {
+      "file": "ai-news-feature-baseline.txt",
+      "genre": "news",
+      "platform": "构造（模型默认输出）",
+      "source": "模型默认写法 · 新闻特写《清晨六点的街道》",
+      "expect": {
+        "minScore": 50
+      },
+      "history": "首跑 16 分 A（只报「据了解」一条），补七条拔高句式后 77 分 D。选特写体是因为第一份模型稿是消息稿——消息稿不写拔高，特写写，而原来的规则一条都没覆盖到那些句式。"
+    },
+    {
+      "file": "ai-webnovel-romance-baseline.txt",
+      "genre": "webnovel",
+      "platform": "构造（模型默认输出）",
+      "source": "模型默认写法 · 都市言情《窗边》",
+      "expect": {
+        "minScore": 30
+      },
+      "history": "首跑 30 分 B（dramatic-pause / eye-flash / lip-arc / all-different），补「泛起涟漪」后 39 分。选言情是因为第一份模型稿是玄幻——八条网文腔里只有四条在言情里出现，说明它们不是玄幻专属。"
+    }
+  ]
+}

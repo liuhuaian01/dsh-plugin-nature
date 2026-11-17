@@ -1,0 +1,48 @@
+{
+  "name": "dsh-plugin-nature",
+  "version": "1.0.0",
+  "description": "nature · 中文写作体检：按 11 个文体分别判定模板腔，给出改写处方，不判断作者身份",
+  "type": "module",
+  "license": "MIT",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "dsh",
+    "chinese",
+    "writing",
+    "editing",
+    "proofreading",
+    "chinese-writing",
+    "style-guide",
+    "template-cliche",
+    "去除ai味",
+    "中文写作",
+    "写作体检"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liuhuaian01/dsh-plugin-nature.git"
+  },
+  "homepage": "https://github.com/liuhuaian01/dsh-plugin-nature#readme",
+  "bugs": {
+    "url": "https://github.com/liuhuaian01/dsh-plugin-nature/issues"
+  }
+}
