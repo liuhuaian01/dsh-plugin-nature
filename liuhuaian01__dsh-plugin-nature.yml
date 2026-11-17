@@ -1,6 +1,0 @@
-url: https://github.com/liuhuaian01/dsh-plugin-nature
-name: liuhuaian01/dsh-plugin-nature
-category: tools
-description:
-  en: 'Deterministic Chinese writing checker for 11 genres: scores template-cliché density, names the exact rules that fired, and prints a rewrite prescription. Reads register and style, never authorship.'
-  zh: '中文写作体检：按十一个文体分别判定模板腔，每一分都能追到具体规则，并给出可直接照着改的处方。它看的是语域和写法，不是作者身份。'
